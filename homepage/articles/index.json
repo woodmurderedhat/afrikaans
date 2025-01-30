@@ -1,0 +1,12 @@
+[
+    {
+        "title": "Eerste Artikel",
+        "url": "articles/first-article.html",
+        "excerpt": "Dit is die eerste artikel."
+    },
+    {
+        "title": "Tweede Artikel",
+        "url": "articles/second-article.html",
+        "excerpt": "Dit is die tweede artikel."
+    }
+]

@@ -3,88 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Afrikaanse Nutsprogramme</title>
-    <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-            text-align: center;
-        }
-        header {
-            background-color: #007bff;
-            color: white;
-            padding: 20px;
-            font-size: 24px;
-        }
-        nav {
-            display: flex;
-            justify-content: center;
-            background-color: #0056b3;
-            padding: 10px;
-        }
-        nav a {
-            color: white;
-            text-decoration: none;
-            padding: 10px 20px;
-            font-size: 18px;
-        }
-        nav a:hover {
-            background-color: #003f7f;
-            border-radius: 5px;
-        }
-        .container {
-            padding: 20px;
-        }
-        .hidden {
-            display: none;
-        }
-    </style>
+    <title>Afrikaanse Nuus Artikels</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        Afrikaanse Nutsprogramme
+        <h1>Afrikaanse Nuus Artikels</h1>
     </header>
     <nav>
         <a href="#" onclick="showPage('home')">Tuis</a>
-        <a href="#" onclick="showPage('tools')">Nutsprogramme</a>
-        <a href="#" onclick="showPage('dictionary')">Woordenboek</a>
+        <a href="#" onclick="showPage('about')">Oor Ons</a>
     </nav>
     
-    <div id="home" class="container">
-        <h1>Welkom by Afrikaanse Nutsprogramme</h1>
-        <p>Hier bied ons verskeie gereedskap aan vir Afrikaanse programmeerders.</p>
-    </div>
-    
-    <div id="tools" class="container hidden">
-        <h1>Nutsprogramme</h1>
-        <p>Kies 'n instrument om te gebruik:</p>
-        <h2>Afrikaans na JavaScript Transpiler</h2>
-        <textarea id="afrikaanseCode" placeholder="Skryf jou kode hier..."></textarea>
-        <textarea id="translatedCode" readonly></textarea>
-        <button onclick="translateCode()">Vertaal</button>
-    </div>
-    
-    <div id="dictionary" class="container hidden">
-        <h1>Woordenboek</h1>
-        <p>Hier sal 'n Afrikaanse woordenboek beskikbaar wees.</p>
-    </div>
+    <main id="home" class="container">
+        <h2>Welkom by Afrikaanse Nuus Artikels</h2>
+        <p>Hier bied ons die nuutste nuus en artikels aan vir Afrikaanse lesers.</p>
+        <section id="articles-section">
+            <!-- Articles will be dynamically loaded here -->
+        </section>
+    </main>
+    <main id="about" class="container hidden">
+        <h2>Oor Ons</h2>
+        <p>Ons is 'n webwerf wat die nuutste Afrikaanse nuus en artikels verskaf.</p>
+    </main>
     
     <script>
-        function showPage(pageId) {
+        const showPage = (pageId) => {
             document.querySelectorAll('.container').forEach(div => {
                 div.classList.add('hidden');
             });
             document.getElementById(pageId).classList.remove('hidden');
         }
 
-        function translateCode() {
-            let afrikaansCode = document.getElementById("afrikaanseCode").value;
-            let translationMap = { "laat": "let", "konstante": "const", "funksie": "function" };
-            let translatedCode = afrikaansCode.split(" ").map(word => translationMap[word] || word).join(" ");
-            document.getElementById("translatedCode").value = translatedCode;
+        const loadArticles = async () => {
+            const response = await fetch('articles/index.json');
+            const articles = await response.json();
+            const articlesSection = document.getElementById('articles-section');
+            articlesSection.innerHTML = ''; // Clear existing articles
+            for (const article of articles) {
+                const articleElement = document.createElement('article');
+                articleElement.classList.add('article');
+                articleElement.innerHTML = `
+                    <h3><a href="${article.url}">${article.title}</a></h3>
+                    <p>${article.excerpt}</p>
+                `;
+                articlesSection.appendChild(articleElement);
+            }
         }
+
+        document.addEventListener('DOMContentLoaded', loadArticles);
     </script>
 </body>
 </html>
