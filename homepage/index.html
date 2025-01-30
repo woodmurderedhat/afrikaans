@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afrikaanse Nutsprogramme</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        header {
+            background-color: #007bff;
+            color: white;
+            padding: 20px;
+            font-size: 24px;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background-color: #0056b3;
+            padding: 10px;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            font-size: 18px;
+        }
+        nav a:hover {
+            background-color: #003f7f;
+            border-radius: 5px;
+        }
+        .container {
+            padding: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        Afrikaanse Nutsprogramme
+    </header>
+    <nav>
+        <a href="#" onclick="showPage('home')">Tuis</a>
+        <a href="#" onclick="showPage('tools')">Nutsprogramme</a>
+        <a href="#" onclick="showPage('dictionary')">Woordenboek</a>
+    </nav>
+    
+    <div id="home" class="container">
+        <h1>Welkom by Afrikaanse Nutsprogramme</h1>
+        <p>Hier bied ons verskeie gereedskap aan vir Afrikaanse programmeerders.</p>
+    </div>
+    
+    <div id="tools" class="container hidden">
+        <h1>Nutsprogramme</h1>
+        <p>Kies 'n instrument om te gebruik:</p>
+        <h2>Afrikaans na JavaScript Transpiler</h2>
+        <textarea id="afrikaanseCode" placeholder="Skryf jou kode hier..."></textarea>
+        <textarea id="translatedCode" readonly></textarea>
+        <button onclick="translateCode()">Vertaal</button>
+    </div>
+    
+    <div id="dictionary" class="container hidden">
+        <h1>Woordenboek</h1>
+        <p>Hier sal 'n Afrikaanse woordenboek beskikbaar wees.</p>
+    </div>
+    
+    <script>
+        function showPage(pageId) {
+            document.querySelectorAll('.container').forEach(div => {
+                div.classList.add('hidden');
+            });
+            document.getElementById(pageId).classList.remove('hidden');
+        }
+
+        function translateCode() {
+            let afrikaansCode = document.getElementById("afrikaanseCode").value;
+            let translationMap = { "laat": "let", "konstante": "const", "funksie": "function" };
+            let translatedCode = afrikaansCode.split(" ").map(word => translationMap[word] || word).join(" ");
+            document.getElementById("translatedCode").value = translatedCode;
+        }
+    </script>
+</body>
+</html>

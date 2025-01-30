@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="af">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afrikaans na JavaScript Transpiler</title>
+    <style>
+        /* Algemene styl vir die bladsy */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1000px;
+            background-color: #fff;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* Layout vir die teksareas */
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 300px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            resize: none;
+            background-color: #f5f5f5;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #afrikaanseCode {
+            background-color: #f9f9f9;
+        }
+
+        #translatedCode {
+            background-color: #eef;
+            color: #333;
+        }
+
+        /* Styl vir die kopieerknoppie */
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            border-radius: 6px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        /* Styl vir die fout boodskap */
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Responsiwiteit vir kleiner skerms */
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Afrikaans na JavaScript Transpiler</h1>
+        <div class="content">
+            <div>
+                <h3>Afrikaans Kode</h3>
+                <textarea id="afrikaanseCode" placeholder="Skryf jou Afrikaanse kode hier..."></textarea>
+            </div>
+            <div>
+                <h3>Vertaalde JavaScript Kode</h3>
+                <textarea id="translatedCode" placeholder="JavaScript sal hier verskyn..." readonly></textarea>
+                <button id="copyButton">Kopieer na Klembord</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Vertaalmap
+        const translationMap = {
+            "laat": "let",
+            "konstante": "const",
+            "funksie": "function",
+            "keerterug": "return",
+            "as": "if",
+            "anders": "else",
+            "terwyl": "while",
+            "vir": "for",
+            "konsole.wys": "console.log",
+            "waar": "true",
+            "vals": "false",
+            "niks": "null",
+            "ongedifinieer": "undefined",
+            "objek": "object",
+            "lys": "array",
+            "waarvan": "for",
+            "elke": "each",
+            "klas": "class",
+            "konstruktor": "constructor",
+            "wag": "await",
+            "aflaai": "async",
+            "geval": "case",
+            "breek": "break",
+            "anders": "default",
+            "probeer": "try",
+            "vang": "catch"
+        };
+
+        // Groep patte vir doeltreffende vertaling
+        const batchRegexPatterns = [
+            { pattern: /\objek\((.*?)\)/g, replacement: (match, p1) => `{ ${p1.split(",").map(field => field.split(":").map(e => e.trim()).join(": ")).join(", ")} }` },
+            { pattern: /\lys\((.*?)\)/g, replacement: (match, p1) => `[${p1.split(",").map(el => el.trim()).join(", ")}]` },
+        ];
+
+        // Sintaksis Validasie
+        function validateSyntax(code) {
+            const errors = [];
+            const braceStack = [];
+            const parenStack = [];
+            const declaredVariables = new Set();
+            const usedVariables = new Set();
+            const functionsWithReturn = new Map();
+            const loops = new Set();
+
+            const lines = code.split("\n");
+            let insideMultiLineString = false;
+
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+
+                // Vermy rye binne meerlyn strings
+                if (insideMultiLineString) {
+                    if (line.includes('"""') || line.includes("'''")) {
+                        insideMultiLineString = false;
+                    }
+                    continue;
+                }
+
+                if (line.includes('"""') || line.includes("'''")) {
+                    insideMultiLineString = true;
+                    continue;
+                }
+
+                // Volg veranderlikes en gebruik
+                if (line.startsWith("laat ") || line.startsWith("konstante ")) {
+                    const variableName = line.split(" ")[1].split("=")[0].trim();
+                    declaredVariables.add(variableName);
+                }
+
+                declaredVariables.forEach(variable => {
+                    if (line.includes(variable) && !line.startsWith(variable + "=")) {
+                        usedVariables.add(variable);
+                    }
+                });
+
+                // Handhaaf hakies en hakies
+                for (let j = 0; j < line.length; j++) {
+                    const char = line[j];
+                    if (char === '{') braceStack.push(i);
+                    if (char === '}') {
+                        if (braceStack.length === 0) errors.push(`Ongemekte hakie aan lyn ${i + 1}`);
+                        else braceStack.pop();
+                    }
+                    if (char === '(') parenStack.push(i);
+                    if (char === ')') {
+                        if (parenStack.length === 0) errors.push(`Ongemekte hakie aan lyn ${i + 1}`);
+                        else parenStack.pop();
+                    }
+                }
+            }
+
+            if (braceStack.length > 0) errors.push(`Ongemekte oop hakie aan lyn ${braceStack[0] + 1}`);
+            if (parenStack.length > 0) errors.push(`Ongemekte oop hakie aan lyn ${parenStack[0] + 1}`);
+
+            return errors;
+        }
+
+        // Hoof vertaal funksie
+        function translateAfrikaansCode(afrikaanseCode) {
+            let translatedCode = afrikaanseCode;
+            try {
+                const syntaxErrors = validateSyntax(afrikaanseCode);
+                if (syntaxErrors.length > 0) {
+                    throw new Error(`Sintaksis foute gevind:\n${syntaxErrors.join("\n")}`);
+                }
+
+                batchRegexPatterns.forEach(({ pattern, replacement }) => {
+                    translatedCode = translatedCode.replace(pattern, replacement);
+                });
+
+                const lines = translatedCode.split("\n");
+                const translatedLines = lines.map(line => {
+                    return line.split(" ").map(word => {
+                        return translationMap[word] || word;
+                    }).join(" ");
+                });
+
+                translatedCode = translatedLines.join("\n");
+
+                return translatedCode;
+            } catch (error) {
+                console.error(`Fout tydens vertaling:\n${error.message}`);
+                return `<span class="error">${error.message}</span>`;
+            }
+        }
+
+        // Gebeurtenis luisteraar vir veranderinge in Afrikaans kode
+        const afrikaanseTextArea = document.getElementById("afrikaanseCode");
+        const translatedTextArea = document.getElementById("translatedCode");
+
+        afrikaanseTextArea.addEventListener("input", () => {
+            const afrikaanseCode = afrikaanseTextArea.value;
+            const javaScriptCode = translateAfrikaansCode(afrikaanseCode);
+            translatedTextArea.value = javaScriptCode;
+        });
+
+        // Kopieer na klembord funksie
+        const copyButton = document.getElementById("copyButton");
+        copyButton.addEventListener("click", () => {
+            const textToCopy = translatedTextArea.value;
+            if (textToCopy) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("Vertaalde kode is gekopieer na jou klembord!");
+                }).catch(err => {
+                    alert("Fout tydens kopieer: " + err);
+                });
+            } else {
+                alert("Geen kode om te kopieer nie.");
+            }
+        });
+    </script>
+
+</body>
+</html>
